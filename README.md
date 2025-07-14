@@ -114,6 +114,19 @@ A sophisticated AI assistant with speech-to-speech capabilities built on a moder
 3. Run `./run.sh` to start both frontend and backend servers
 4. If you need to update dependencies later, use `./install-deps.sh`
 
+### RunPod Deployment
+
+On a fresh RunPod H-100 instance you can start everything with a single command:
+
+```bash
+chmod +x runpod.sh && ./runpod.sh
+```
+
+This script installs the backend dependencies with CUDA support and starts the
+FastAPI server accessible on port 8000. Test it from another machine by visiting
+`http://<RUNPOD_IP>:8000/health` or by pointing a Twilio phone number webhook to
+`http://<RUNPOD_IP>:8000/twilio/voice`.
+
 ### Manual Setup (Alternative)
 
 If you prefer to set up the project manually, follow these steps:

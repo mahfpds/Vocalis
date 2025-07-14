@@ -33,6 +33,9 @@ VAD_THRESHOLD = float(os.getenv("VAD_THRESHOLD", 0.5))
 VAD_BUFFER_SIZE = int(os.getenv("VAD_BUFFER_SIZE", 30))
 AUDIO_SAMPLE_RATE = int(os.getenv("AUDIO_SAMPLE_RATE", 48000))
 
+# Twilio streaming WebSocket URL (used in TwiML response)
+TWILIO_WS_URL = os.getenv("TWILIO_WS_URL", None)
+
 def get_config() -> Dict[str, Any]:
     """
     Returns all configuration settings as a dictionary.
@@ -52,4 +55,5 @@ def get_config() -> Dict[str, Any]:
         "vad_threshold": VAD_THRESHOLD,
         "vad_buffer_size": VAD_BUFFER_SIZE,
         "audio_sample_rate": AUDIO_SAMPLE_RATE,
+        "twilio_ws_url": TWILIO_WS_URL,
     }
