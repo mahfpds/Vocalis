@@ -18,6 +18,13 @@ from .services.transcription import WhisperTranscriber
 from .services.llm import LLMClient
 from .services.tts import TTSClient
 from .services.vision import vision_service
+# Service dependency container
+from . import dependencies
+from .dependencies import (
+    get_transcription_service,
+    get_llm_service,
+    get_tts_service,
+)
 
 # Import routes
 from .routes.websocket import websocket_endpoint
@@ -30,10 +37,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Global service instances
-transcription_service = None
-llm_service = None
-tts_service = None
+# Global service instances are defined in dependencies module
 # Vision service is a singleton already initialized in its module
 
 @asynccontextmanager
@@ -47,21 +51,19 @@ async def lifespan(app: FastAPI):
     # Initialize services on startup
     logger.info("Initializing services...")
     
-    global transcription_service, llm_service, tts_service
-    
     # Initialize transcription service
-    transcription_service = WhisperTranscriber(
+    dependencies.transcription_service = WhisperTranscriber(
         model_size=cfg["whisper_model"],
         sample_rate=cfg["audio_sample_rate"]
     )
     
     # Initialize LLM service
-    llm_service = LLMClient(
+    dependencies.llm_service = LLMClient(
         api_endpoint=cfg["llm_api_endpoint"]
     )
     
     # Initialize TTS service
-    tts_service = TTSClient(
+    dependencies.tts_service = TTSClient(
         api_endpoint=cfg["tts_api_endpoint"],
         model=cfg["tts_model"],
         voice=cfg["tts_voice"],
@@ -104,16 +106,6 @@ app.add_middleware(
 # Register Twilio webhook routes
 app.include_router(twilio_router)
 
-# Service dependency functions
-def get_transcription_service():
-    return transcription_service
-
-def get_llm_service():
-    return llm_service
-
-def get_tts_service():
-    return tts_service
-
 # API routes
 @app.get("/")
 async def root():
@@ -126,9 +118,9 @@ async def health_check():
     return {
         "status": "ok",
         "services": {
-            "transcription": transcription_service is not None,
-            "llm": llm_service is not None,
-            "tts": tts_service is not None,
+            "transcription": dependencies.transcription_service is not None,
+            "llm": dependencies.llm_service is not None,
+            "tts": dependencies.tts_service is not None,
             "vision": vision_service.is_ready()
         },
         "config": {
@@ -141,25 +133,30 @@ async def health_check():
 @app.get("/config")
 async def get_full_config():
     """Get full configuration."""
-    if not all([transcription_service, llm_service, tts_service]) or not vision_service.is_ready():
+    if not all([dependencies.transcription_service, dependencies.llm_service, dependencies.tts_service]) or not vision_service.is_ready():
         raise HTTPException(status_code=503, detail="Services not initialized")
     
     return {
-        "transcription": transcription_service.get_config(),
-        "llm": llm_service.get_config(),
-        "tts": tts_service.get_config(),
+        "transcription": dependencies.transcription_service.get_config(),
+        "llm": dependencies.llm_service.get_config(),
+        "tts": dependencies.tts_service.get_config(),
         "system": config.get_config()
     }
 
 # WebSocket route
 @app.websocket("/ws")
-async def websocket_route(websocket: WebSocket):
+async def websocket_route(
+    websocket: WebSocket,
+    transcriber: WhisperTranscriber = Depends(get_transcription_service),
+    llm_client: LLMClient = Depends(get_llm_service),
+    tts_client: TTSClient = Depends(get_tts_service),
+):
     """WebSocket endpoint for bidirectional audio streaming."""
     await websocket_endpoint(
-        websocket, 
-        transcription_service, 
-        llm_service, 
-        tts_service
+        websocket,
+        transcriber,
+        llm_client,
+        tts_client,
     )
 
 # Run server directly if executed as script
