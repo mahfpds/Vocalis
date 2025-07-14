@@ -124,8 +124,19 @@ chmod +x runpod.sh && ./runpod.sh
 
 This script installs the backend dependencies with CUDA support and starts the
 FastAPI server accessible on port 8000. Test it from another machine by visiting
-`http://<RUNPOD_IP>:8000/health` or by pointing a Twilio phone number webhook to
-`http://<RUNPOD_IP>:8000/twilio/voice`.
+`http://<RUNPOD_IP>:8000/health`.
+
+### Twilio Integration
+
+To route phone calls to Vocalis, configure your Twilio phone number to use the
+following webhook URL:
+
+```
+http://<RUNPOD_IP>:8000/twilio/voice
+```
+
+Set `TWILIO_WS_URL` in `backend/.env` to the public WebSocket address that
+Twilio should connect to (typically the same IP with `wss://`).
 
 ### Manual Setup (Alternative)
 
