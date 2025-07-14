@@ -21,6 +21,7 @@ from .services.vision import vision_service
 
 # Import routes
 from .routes.websocket import websocket_endpoint
+from .routes.twilio import router as twilio_router
 
 # Configure logging
 logging.basicConfig(
@@ -99,6 +100,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register Twilio webhook routes
+app.include_router(twilio_router)
 
 # Service dependency functions
 def get_transcription_service():
