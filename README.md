@@ -127,6 +127,14 @@ FastAPI server accessible on port 8000. Test it from another machine by visiting
 `http://<RUNPOD_IP>:8000/health` or by pointing a Twilio phone number webhook to
 `http://<RUNPOD_IP>:8000/twilio/voice`.
 
+### Serving `wss://` Connections
+
+Twilio will only connect to the `/twilio/ws` endpoint over a secure WebSocket. You can enable
+`wss://` in two ways:
+
+- Use a reverse proxy such as **nginx** with a valid TLS certificate.
+- Or start `uvicorn` with the `--ssl-keyfile` and `--ssl-certfile` arguments.
+
 ### Manual Setup (Alternative)
 
 If you prefer to set up the project manually, follow these steps:
