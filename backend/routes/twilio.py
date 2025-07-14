@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Request, WebSocket
+from fastapi import APIRouter, Request, WebSocket, Depends
 from fastapi.responses import Response
 from ..services.transcription import WhisperTranscriber
 from ..services.llm import LLMClient
 from ..services.tts import TTSClient
+from .. import dependencies as deps
 from .. import config
 import base64
 import json
@@ -102,9 +103,11 @@ async def twilio_voice(request: Request):
     return Response(content=twiml, media_type="text/xml")
 
 @router.websocket("/twilio/ws")
-async def twilio_ws(websocket: WebSocket,
-                    transcriber: WhisperTranscriber,
-                    llm_client: LLMClient,
-                    tts_client: TTSClient):
+async def twilio_ws(
+    websocket: WebSocket,
+    transcriber: WhisperTranscriber = Depends(deps.get_transcription_service),
+    llm_client: LLMClient = Depends(deps.get_llm_service),
+    tts_client: TTSClient = Depends(deps.get_tts_service),
+):
     manager = TwilioStreamManager(transcriber, llm_client, tts_client)
     await manager.handle(websocket)
